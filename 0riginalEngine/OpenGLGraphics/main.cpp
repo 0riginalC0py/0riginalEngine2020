@@ -4,19 +4,33 @@
 #include "glfw3.h"
 
 #include "Mesh.h"
+#include "Camera.h"
 
 #include <fstream>
 #include <sstream>
 
+
 #define uint unsigned int
 #define WIDTH 1080
 #define HEIGHT 720
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
+
+float lastX = WIDTH / 2.0f;
+float lastY = HEIGHT / 2.0f;
+bool firstMouse = true;
+Camera cam(glm::vec3(-2, -2, 1));
+
 int main()
 {
 	float r = 0.25f																																																				;
 	float g	= 0.25f																																																				;
 	float b	= 0.25f																																																				;
 	float a	= 1.0f																																																				;
+
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
 
 	Mesh cube;
 
@@ -46,15 +60,16 @@ int main()
 		return -3																																																				;
 	}
 
-	//auto major = ogl_GetMajorVersion();
-	//auto minor = ogl_GetMinorVersion();
-	//printf("GL:");
+	
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	cube.initialiseCube();
 
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 50.0f);
-	glm::mat4 view = glm::lookAt(glm::vec3(-2, -2, 1), glm::vec3(0), glm::vec3(0, 1, 0));
+	
 	glm::mat4 model = glm::mat4(1.0f);
 	
 	uint vertex_shader_id = 0;
@@ -189,14 +204,18 @@ int main()
 	//Game loop
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)																																										;
-
+		
 		static int framecount = 0;
 		framecount++;
 
+		cam.processKeyboard(window, deltaTime);
 		model = glm::rotate(model, 0.016f, glm::vec3(0.2f, 1.0f, 1.0f));
 
-		glm::mat4 pv = projection * view;
+		glm::mat4 pv = projection * cam.getViewMatrix();//view;
 		glm::vec4 color = glm::vec4(r, g, b, a);
 
 		glUseProgram(shader_program_id);
@@ -251,12 +270,36 @@ int main()
 		else if (a <= 0)
 			apositive = true;
 
+		
 		glfwSwapBuffers(window)																																																	;
 		glfwPollEvents();
-
 	}
 
 	glfwDestroyWindow(window)																																																	;
 	glfwTerminate()																																																				;
 	return 0;
+}
+
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xOffset = xpos - lastX;
+	float yOffset = lastY - ypos;
+
+	lastX = xpos;
+	lastY = ypos;
+
+	cam.processMouseMovement(xOffset, yOffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+{
+	cam.processMouseScroll(yOffset);
 }
