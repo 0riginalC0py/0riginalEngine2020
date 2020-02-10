@@ -7,6 +7,39 @@ Mesh::~Mesh()
 	glDeleteBuffers(1, &ibo);
 }
 
+void Mesh::initialiseTriangle()
+{
+	assert(vao == 0);
+
+	glm::vec3 verticies[] =
+	{
+		glm::vec3(-1.0f, 1.0f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 0.0f),
+		glm::vec3(-1.0f, -1.0f, 0.0f)
+	};
+
+	int index_buffer[]{ 0,2,1 };
+	indexCount = 3;
+
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ibo);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, indexCount * sizeof(glm::vec3), &verticies[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(int), &index_buffer[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 void Mesh::initialiseQuad()
 {
 	assert(vao == 0);

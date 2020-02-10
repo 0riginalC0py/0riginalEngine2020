@@ -14,6 +14,7 @@ public:
 		glm::vec2 texCoord;
 	};
 	
+	void initialiseTriangle();
 	void initialiseQuad();
 	void initialiseCube();
 	virtual void draw();
