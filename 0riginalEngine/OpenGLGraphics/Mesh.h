@@ -5,7 +5,7 @@ class Mesh
 {
 public:
 
-	Mesh() : triCount(0), vao(0), vbo(0), ibo(0) {}
+	Mesh() : indexCount(0), vao(0), vbo(0), ibo(0) {}
 	virtual ~Mesh();
 
 	struct Vertex { 
@@ -15,11 +15,12 @@ public:
 	};
 	
 	void initialiseQuad();
+	void initialiseCube();
 	virtual void draw();
 
 protected:
 
-	unsigned int triCount;
+	unsigned int indexCount;
 	unsigned int vao, vbo, ibo;
 };
 

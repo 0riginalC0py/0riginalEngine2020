@@ -3,6 +3,8 @@
 #include "../glcore/gl_core_4_5.h"
 #include "glfw3.h"
 
+#include "Mesh.h"
+
 #include <fstream>
 #include <sstream>
 
@@ -15,6 +17,8 @@ int main()
 	float g	= 0.25f																																																				;
 	float b	= 0.25f																																																				;
 	float a	= 1.0f																																																				;
+
+	Mesh cube;
 
 	bool rpositive = true;
 	bool gpositive = true;
@@ -46,58 +50,8 @@ int main()
 	//auto minor = ogl_GetMinorVersion();
 	//printf("GL:");
 
-	//Create Mesh Data
-	glm::vec3 verticies[] =
-	{
-		//SQUARE VERT COUNT = 6
-		//glm::vec3(-1.0f, 1.0f, 0.0f),
-		//glm::vec3(1.0f, 1.0f, 0.0f),
-		//glm::vec3(-1.0f, -1.0f, 0.0f),
-		//glm::vec3(1.0f, -1.0f, 0.0f)
+	cube.initialiseCube();
 
-		//CUBE VERT COUNT = 36
-		glm::vec3(1.0f, 1.0f, 1.0f),
-		glm::vec3(1.0f,-1.0f, 1.0f),
-		glm::vec3(1.0f, 1.0f,-1.0f), 
-		glm::vec3(1.0f,-1.0f,-1.0f),
-		glm::vec3(-1.0f,-1.0f,-1.0f),
-		glm::vec3(-1.0f,-1.0f, 1.0f),
-		glm::vec3(-1.0f, 1.0f,-1.0f),
-		glm::vec3(-1.0f, 1.0f, 1.0f),
-	};
-	int index_buffer[]{	0,2,1,1,2,3,
-						0,1,5,0,5,7,
-						5,4,6,6,7,5,
-						3,6,4,3,2,6,
-						6,2,0,0,7,6,
-						1,4,5,4,1,3
-	};
-	int index_counter = 36;
-	int vertices_counter = 36;
-
-	//Create and Load Mesh
-	uint VAO;
-	glGenVertexArrays(1, &VAO);
-
-	uint VBO;
-	glGenBuffers(1, &VBO);
-
-	uint IBO;
-	glGenBuffers(1, &IBO);
-	
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, index_counter * sizeof(glm::vec3), &verticies[0], GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertices_counter * sizeof(int), index_buffer, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 50.0f);
 	glm::mat4 view = glm::lookAt(glm::vec3(-2, -2, 1), glm::vec3(0), glm::vec3(0, 1, 0));
@@ -243,7 +197,6 @@ int main()
 		model = glm::rotate(model, 0.016f, glm::vec3(0.2f, 1.0f, 1.0f));
 
 		glm::mat4 pv = projection * view;
-
 		glm::vec4 color = glm::vec4(r, g, b, a);
 
 		glUseProgram(shader_program_id);
@@ -253,17 +206,8 @@ int main()
 		glUniformMatrix4fv(uniform_location, 1, false, glm::value_ptr(model));
 		uniform_location = glGetUniformLocation(shader_program_id, "color");
 		glUniform4fv(uniform_location, 1, glm::value_ptr(color));
-
-
-		glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, number_of_verts)																																														;
-		glDrawElements(GL_TRIANGLES, index_counter, GL_UNSIGNED_INT, 0);
-
-		//void mesh::render()
-		//{
-		//	glBindVertexArray(m_vertex_array_objects);
-		//	if(m_index_buffer_object)
-		//}
+		
+		cube.draw();
 
 		//GAME LOGIC, UPDATE AND RENDER
 		if (rpositive)
@@ -311,10 +255,6 @@ int main()
 		glfwPollEvents();
 
 	}
-
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &VAO);
-	glDeleteBuffers(1, &IBO);
 
 	glfwDestroyWindow(window)																																																	;
 	glfwTerminate()																																																				;
