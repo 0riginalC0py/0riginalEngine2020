@@ -20,7 +20,7 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
-Camera cam(glm::vec3(-2, -2, 1));
+Camera cam(glm::vec3(0, 0, 9));
 
 int main()
 {
@@ -68,7 +68,7 @@ int main()
 	cube.initialiseCube();
 
 	//Camera
-	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 50.0f);
+	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 	
 	glm::mat4 model = glm::mat4(1.0f);
 	

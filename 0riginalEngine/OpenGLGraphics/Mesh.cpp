@@ -7,15 +7,15 @@ Mesh::~Mesh()
 	glDeleteBuffers(1, &ibo);
 }
 
-void Mesh::initialiseTriangle()
+void Mesh::initialiseTriangle(glm::vec3 point1, glm::vec3 point2, glm::vec3 point3)
 {
 	assert(vao == 0);
 
 	glm::vec3 verticies[] =
 	{
-		glm::vec3(-1.0f, 1.0f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 0.0f),
-		glm::vec3(-1.0f, -1.0f, 0.0f)
+		point1,
+		point2,
+		point3
 	};
 
 	int index_buffer[]{ 0,2,1 };

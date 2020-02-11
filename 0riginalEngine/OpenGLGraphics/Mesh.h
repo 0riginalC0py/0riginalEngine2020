@@ -14,7 +14,7 @@ public:
 		glm::vec2 texCoord;
 	};
 	
-	void initialiseTriangle();
+	void initialiseTriangle(glm::vec3 point1 = glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3 point2 = glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3 point3 = glm::vec3(-1.0f, -1.0f, 0.0f));
 	void initialiseQuad();
 	void initialiseCube();
 	virtual void draw();
