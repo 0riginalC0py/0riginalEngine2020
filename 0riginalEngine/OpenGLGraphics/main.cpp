@@ -213,7 +213,7 @@ int main()
 		framecount++;
 
 		cam.processKeyboard(window, deltaTime);
-		model = glm::rotate(model, 0.016f, glm::vec3(0.2f, 1.0f, 1.0f));
+		model = glm::rotate(model, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
 
 		glm::mat4 pv = projection * cam.getViewMatrix();//view;
 		glm::vec4 color = glm::vec4(r, g, b, a);
