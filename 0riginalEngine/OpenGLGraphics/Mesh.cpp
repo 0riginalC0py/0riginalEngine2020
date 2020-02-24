@@ -121,6 +121,63 @@ void Mesh::initialiseCube()
 
 }
 
+void Mesh::initialisePlane(unsigned int size)
+{
+	int vertCount = size * size;
+	int half = size / 2;
+	glm::vec3 temp_vec;
+	
+	std::vector<glm::vec3> vertices;
+
+	for (int width = 0; width < size; width++)
+	{
+		for (int height = 0; height < size; height++)
+		{
+			temp_vec.x = height - half;
+			temp_vec.z = width - half;
+			temp_vec.y = 0;
+			vertices.push_back(temp_vec);
+		}
+	}
+
+	indexCount = (size - 1) * (size - 1) * 2 * 3;
+
+	std::vector<int> indicies;
+	int runner = 0;
+	for (int row = 0; row < size - 1; row++)
+	{
+		for (int col = 0; col < size - 1; col++)
+		{
+			indicies.push_back(size * row + col);
+			indicies.push_back(size * row + col + size);
+			indicies.push_back(size * row + col + size + 1);
+
+			indicies.push_back(size * row + col);
+			indicies.push_back(size * row + col + size + 1);
+			indicies.push_back(size * row + col + 1);
+
+		}
+	}
+
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ibo);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, indexCount * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(int), &indicies[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 void Mesh::draw()
 {
 	glBindVertexArray(vao);

@@ -5,6 +5,7 @@
 
 #include "Mesh.h"
 #include "Camera.h"
+#include "OBJLoader.h"
 
 #include <fstream>
 #include <sstream>
@@ -33,6 +34,7 @@ int main()
 	float lastFrame = 0.0f;
 
 	Mesh cube;
+	OBJLoader bunny;
 
 	bool rpositive = true;
 	bool gpositive = true;
@@ -65,7 +67,12 @@ int main()
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	cube.initialiseCube();
+	//cube.initialisePlane(105);
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> uvs;
+	std::vector<glm::vec3> normals;
+	bunny.loadOBJ("..\\OBJs\\cube.obj", vertices, uvs, normals);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
@@ -213,7 +220,7 @@ int main()
 		framecount++;
 
 		cam.processKeyboard(window, deltaTime);
-		model = glm::rotate(model, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
+		//model = glm::rotate(model, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
 
 		glm::mat4 pv = projection * cam.getViewMatrix();//view;
 		glm::vec4 color = glm::vec4(r, g, b, a);
@@ -226,7 +233,8 @@ int main()
 		uniform_location = glGetUniformLocation(shader_program_id, "color");
 		glUniform4fv(uniform_location, 1, glm::value_ptr(color));
 		
-		cube.draw();
+		//cube.draw();
+		bunny.draw();
 
 		//GAME LOGIC, UPDATE AND RENDER
 		if (rpositive)
