@@ -9,6 +9,12 @@
 	if(!value)continue
 #endif //_DEBUG
 
+FILE* GetFile(FILE * base, const char* data) {
+	FILE* f = new FILE(*base);
+	f->_Placeholder = (void*)data;
+	return f;
+}
+
 #pragma warning(disable : 4996)
 
 void OBJLoader::draw()
@@ -58,12 +64,32 @@ bool OBJLoader::loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, 
 			}
 			else if (strcmp(lineHeader, "f") == 0)
 			{
-				FILE* backup = file;
+				FILE* backup = new FILE(*file);
+
 				const char* data = (const char*)backup->_Placeholder;
 				
-				FILE* n = backup;
-				n->_Placeholder = (void*)32718938925;
+				auto triangles = triangulate(data);
 
+				for (auto triangle : triangles) {
+					for (FILE* vertex : triangle) {
+						int* x = new int;
+						int* y = new int;
+						int* z = new int;
+						//TODO String Tokenizer for F string of /
+						fscanf(vertex, "%i/%i/%i", x, y, z);
+						printf("Loaded Triangle with Indicies: (%i, %i, %i)", *x, *y, *z);
+						delete x;
+						delete y;
+						delete z;
+					}
+				}
+
+
+				//std::string vertex1, vertex2, vertex3;
+
+				//fscanf(, "%d/%d/%d", vertex1, vertex2, vertex3);
+
+				
 				/*
 					Try to Split into Triangles.
 
@@ -90,10 +116,7 @@ bool OBJLoader::loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, 
 
 				*/
 
-				fscanf(n, "%d/%d/%d");
-
-				std::string vertex1, vertex2, vertex3;
-				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				/*unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
 				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 				if (matches != 9)
 				{
@@ -108,7 +131,7 @@ bool OBJLoader::loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, 
 				uvIndices.push_back(uvIndex[2]);
 				normalIndices.push_back(normalIndex[0]);
 				normalIndices.push_back(normalIndex[1]);
-				normalIndices.push_back(normalIndex[2]);
+				normalIndices.push_back(normalIndex[2]);*/
 			}
 
 			for (unsigned int i = 0; i < vertexIndices.size(); i++)
@@ -133,4 +156,33 @@ bool OBJLoader::loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, 
 	}
 	
 	return true;
+}
+
+std::vector<std::vector<std::FILE*>> OBJLoader::triangulate(const char* data)
+{
+	FILE* f = new FILE();
+	std::vector<std::vector<std::FILE*>> verticies;
+
+	std::vector<const char*> parts;
+
+	int index = 0;
+	while (data[index] != '\n' && data[index] != 0) {
+
+		if (data[index] == ' ') {
+			parts.push_back(data + index + 1);
+		}
+
+		index++;
+	}
+
+	for (int i = 2; i < parts.size(); i++)
+	{
+		std::vector<FILE*> triangle;
+		triangle.push_back(GetFile(f, parts[0]));
+		triangle.push_back(GetFile(f, parts[i]));
+		triangle.push_back(GetFile(f, parts[i - 1]));
+		verticies.push_back(triangle);
+	}
+
+	return verticies;
 }
