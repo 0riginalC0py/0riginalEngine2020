@@ -76,7 +76,8 @@ bool OBJLoader::loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, 
 						int* y = new int;
 						int* z = new int;
 						//TODO String Tokenizer for F string of /
-						fscanf(vertex, "%i/%i/%i", x, y, z);
+						auto test = splitString(data, '/');
+						//fscanf(vertex, "%i/%i/%i", x, y, z);
 						printf("Loaded Triangle with Indicies: (%i, %i, %i)", *x, *y, *z);
 						delete x;
 						delete y;
@@ -186,3 +187,23 @@ std::vector<std::vector<std::FILE*>> OBJLoader::triangulate(const char* data)
 
 	return verticies;
 }
+
+std::vector<const char*> OBJLoader::splitString(const char* data, char character, bool ignoreFirst)
+{
+	int offset = 0;
+
+	std::vector<const char*> segments;
+
+	if (!ignoreFirst)
+		segments.push_back(data);
+
+	while (*(data + offset) != 0 && *(data + offset) != '\n' && (character == ' ' ? true : (*(data + offset) != ' ')))
+	{
+		if (*(data + offset) == character)
+			segments.push_back(data + ++offset);
+
+		++offset;
+	}
+	return segments;
+}
+
