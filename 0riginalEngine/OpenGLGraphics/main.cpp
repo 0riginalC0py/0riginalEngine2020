@@ -23,6 +23,23 @@ float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 Camera cam(glm::vec3(0, 0, 9));
 
+std::string ReadTextTEST(const char* filepath) {
+	std::ifstream file(filepath, std::ifstream::in);
+	std::stringstream fileData;
+
+
+	//Vertex Shader File Loading
+	if (file.is_open() && file.good()) {
+		fileData << file.rdbuf();
+
+		file.close();
+
+		return fileData.str();
+	}
+	else
+		throw "Could not Load File";
+};
+
 int main()
 {
 	float r = 0.25f																																																				;
@@ -67,12 +84,9 @@ int main()
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	//cube.initialisePlane(105);
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec2> uvs;
-	std::vector<glm::vec3> normals;
-	bunny.loadOBJ("..\\OBJs\\Orb.obj", vertices, uvs, normals);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	cube.initialiseCube();
+
+	auto mesh = bunny.loadOBJ("../OBJs/cube.obj");
 
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
@@ -203,8 +217,10 @@ int main()
 
 #pragma endregion
 
-	glClearColor(0.211764706f, 0.223529412f, 0.243137255f, 1.0f); //r, g, b, a)																																						
+	//glClearColor(0.211764706f, 0.223529412f, 0.243137255f, 1.0f); //r, g, b, a)																																						
 	
+	glClearColor(0, 0, 0, 1.0f);
+
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -223,7 +239,7 @@ int main()
 		//model = glm::rotate(model, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
 
 		glm::mat4 pv = projection * cam.getViewMatrix();//view;
-		glm::vec4 color = glm::vec4(r, g, b, a);
+		glm::vec4 color = glm::vec4(1, 1, 1, 1);//r, g, b, a);
 
 		glUseProgram(shader_program_id);
 		auto uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");

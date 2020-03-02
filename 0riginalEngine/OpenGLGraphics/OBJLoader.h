@@ -9,17 +9,27 @@
 #include <sstream>
 #include <vector>
 #include <stdio.h>
+#include <string>
+struct MeshData
+{
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> uvs;
+	std::vector<glm::vec3> normals;
+	std::vector<unsigned int> indices;
+
+};
 
 class OBJLoader
 {
 public:
 
 	virtual void draw();
-	bool loadOBJ(const char* path, std::vector<glm::vec3>& out_vertices, std::vector<glm::vec2>& out_uvs, std::vector<glm::vec3>& out_normals);
-	std::vector<std::vector<FILE*>> triangulate(const char* vertex);
+	MeshData loadOBJ(const char* path);
+	std::vector<std::vector<const char*>> triangulate(std::vector<const char*> data);
 	std::vector<const char*> splitString(const char* data, char character = ' ', bool ignoreFirst = true);
 
 protected:
 	unsigned int vertex_count;
+	unsigned int vao, vbo, ibo;
 };
 
