@@ -26,7 +26,7 @@ public:
 	virtual void draw();
 	MeshData loadOBJ(const char* path);
 	std::vector<std::vector<const char*>> triangulate(std::vector<const char*> data);
-	std::vector<const char*> splitString(const char* data, char character = ' ', bool ignoreFirst = true);
+	std::vector<const char*> splitString(const char* data, const char* character = " ", bool ignoreFirst = true);
 
 protected:
 	unsigned int vertex_count;

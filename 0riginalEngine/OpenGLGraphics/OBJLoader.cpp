@@ -103,9 +103,36 @@ MeshData OBJLoader::loadOBJ(const char* path)
 	std::string file = ReadText(path);
 	const char* data = file.c_str();
 
+	int dataLength = strlen(data) + 1;
+
+	char* processedData = (char*)malloc(dataLength);
+	int processedIndex = 0;
+
+	for (int i = 0; i < dataLength;) {
+		const char* currentChar = data + i++;
+
+		if (currentChar[0] == ' ') {
+			currentChar = data + i++;
+			while (currentChar[0] != 0 && currentChar[0] == ' ') {
+				currentChar = data + i++;
+			}
+			if (currentChar[0] == '\n')processedData[processedIndex++] = '\n';
+			else if (currentChar[0] == '\0') {
+				processedData[processedIndex++] = '\0';
+					break;
+			} else {
+				processedData[processedIndex++] = ' ';
+				processedData[processedIndex++] = *currentChar;
+			}
+		}
+		else
+			processedData[processedIndex++] = *currentChar;
+	}
+	if(processedData[processedIndex - 1] != '\0')processedData[processedIndex++] = '\0';
 
 
-	vector<const char*> lines = splitString(data, '\n', false);
+
+	vector<const char*> lines = splitString(processedData, "\n", false);
 
 
 	for (const char* line : lines) 
@@ -148,48 +175,48 @@ MeshData OBJLoader::loadOBJ(const char* path)
 					bool isDoubleSlash = false;
 					vector<const char*> indicies;
 					if (Indexof(point, "//") == -1)
-						indicies = splitString(point, '/', false);
+						indicies = splitString(point, "/", false);
 					else 
 					{
-						indicies = splitString(point, '//', false);
+						indicies = splitString(point, "//", false);
 						isDoubleSlash = true;
 					}
 
 					switch (indicies.size())
 					{
 					case 1:
-						vertexIndices.push_back(std::stoi(indicies[0]));
+						vertexIndices.push_back(std::stoi(indicies[0]) - 1);
 						break;
 					case 2:
 						if (isDoubleSlash)
 						{
-							vertIndex = std::stoi(indicies[0]);
-							normIndex = std::stoi(indicies[1]);
+							vertIndex = std::stoi(indicies[0]) - 1;
+							normIndex = std::stoi(indicies[1]) - 1;
 
 							vertexIndices.push_back(vertexIndices.size());
-							vertex_buffer.push_back(temp_vertices[vertIndex - 1]);
-							normal_buffer.push_back(temp_normals[normIndex - 1]);
+							vertex_buffer.push_back(temp_vertices[vertIndex]);
+							normal_buffer.push_back(temp_normals[normIndex]);
 						}
 						else
 						{
-							vertIndex = std::stoi(indicies[0]);
-							uvIndex = std::stoi(indicies[1]);
+							vertIndex = std::stoi(indicies[0]) - 1;
+							uvIndex = std::stoi(indicies[1]) - 1;
 
 							vertexIndices.push_back(vertexIndices.size());
-							vertex_buffer.push_back(temp_vertices[vertIndex - 1]);
-							uv_buffer.push_back(temp_uvs[uvIndex - 1]);
+							vertex_buffer.push_back(temp_vertices[vertIndex]);
+							uv_buffer.push_back(temp_uvs[uvIndex]);
 						}
 						break;
 					case 3:
 
-						vertIndex = std::stoi(indicies[0]);
-						uvIndex = std::stoi(indicies[1]);
-						normIndex = std::stoi(indicies[2]);
+						vertIndex = std::stoi(indicies[0]) - 1;
+						uvIndex = std::stoi(indicies[1]) - 1;
+						normIndex = std::stoi(indicies[2]) - 1;
 
 						vertexIndices.push_back(vertexIndices.size());
-						vertex_buffer.push_back(temp_vertices[vertIndex - 1]);
-						normal_buffer.push_back(temp_normals[normIndex - 1]);
-						uv_buffer.push_back(temp_uvs[uvIndex - 1]);
+						vertex_buffer.push_back(temp_vertices[vertIndex]);
+						normal_buffer.push_back(temp_normals[normIndex]);
+						uv_buffer.push_back(temp_uvs[uvIndex]);
 						break;
 					default:
 						std::cout << "Something's Wrong" << std::endl;
@@ -199,6 +226,9 @@ MeshData OBJLoader::loadOBJ(const char* path)
 			}
 		}
 	}
+
+	free(processedData);
+	printf("BOIIIII");
 	if (vertex_buffer.size() == 0)
 		vertex_buffer = temp_vertices;
 
@@ -360,22 +390,28 @@ vector<vector<const char*>> OBJLoader::triangulate(vector<const char*> data)
 	return result;
 }
 
-vector<const char*> OBJLoader::splitString(const char* data, char character, bool ignoreFirst)
+vector<const char*> OBJLoader::splitString(const char* data, const char* characters, bool ignoreFirst)
 {
+	int characterLength = strlen(characters);
 	int offset = 0;
 
 	vector<const char*> segments;
 
+	bool isNL = strcmp(characters, "\n") == 0;
+	bool isSpace = strcmp(characters, " ") == 0;
+
 	if (!ignoreFirst)
 		segments.push_back(data);
+	
+	while (data[offset] != '\0'){
+		if(!isNL && data[offset] == '\n')break;
 
-	while (data[offset] != 0 && (character == '\n' ? true : data[offset] != '\n') && ((character == ' ' || character == '\n') ? true : (data[offset] != ' ')))
-	{
-		if (data[offset] == character)
-			segments.push_back(&data[++offset]);
+		if(!(isNL || isSpace) && data[offset] == ' ')break;
+
+		if (startsWith(data + offset, characters))
+			segments.push_back(data + (offset += characterLength));
 		else
 			++offset;
 	}
 	return segments;
 }
-

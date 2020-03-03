@@ -86,7 +86,7 @@ int main()
 
 	cube.initialiseCube();
 
-	auto mesh = bunny.loadOBJ("../OBJs/cube.obj");
+	auto mesh = bunny.loadOBJ("../OBJs/Orb.obj");
 
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
@@ -114,6 +114,7 @@ int main()
 
 
 	//Allocate space for shader program
+
 	vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
 
 	//Convert to raw char*
@@ -220,6 +221,8 @@ int main()
 	//glClearColor(0.211764706f, 0.223529412f, 0.243137255f, 1.0f); //r, g, b, a)																																						
 	
 	glClearColor(0, 0, 0, 1.0f);
+
+	glEnable(GL_DEPTH_TEST);
 
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
