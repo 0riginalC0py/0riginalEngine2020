@@ -5,7 +5,7 @@
 
 #include "Mesh.h"
 #include "Camera.h"
-#include "OBJLoader.h"
+#include "OBJMesh.h"
 
 #include <fstream>
 #include <sstream>
@@ -14,6 +14,12 @@
 #define uint unsigned int
 #define WIDTH 1080
 #define HEIGHT 720
+
+enum TARGET_MODEL {
+	TEAPOT,
+	BUNNY,
+	CUBE
+};
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
@@ -50,8 +56,10 @@ int main()
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
 
+	TARGET_MODEL model = TEAPOT;
 	Mesh cube;
-	OBJLoader bunny;
+	aie::OBJMesh bunny;
+	aie::OBJMesh teapot;
 
 	bool rpositive = true;
 	bool gpositive = true;
@@ -85,13 +93,16 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	cube.initialiseCube();
+	glm::mat4 cube_model = glm::mat4(1.0f);
 
-	auto mesh = bunny.loadOBJ("../OBJs/cube.obj");
+	bunny.load("../OBJs/bunny.obj");
+	glm::mat4 bunny_model = glm::mat4(1.0f);
+
+	teapot.load("../OBJs/teapot.obj");
+	glm::mat4 teapot_model = glm::mat4(1.0f);
 
 	//Camera
 	glm::mat4 projection = glm::perspective(glm::pi<float>() * 0.25f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
-	
-	glm::mat4 model = glm::mat4(1.0f);
 	
 	uint vertex_shader_id = 0;
 	uint fragment_shader_id = 0;
@@ -217,9 +228,11 @@ int main()
 
 #pragma endregion
 
-	//glClearColor(0.211764706f, 0.223529412f, 0.243137255f, 1.0f); //r, g, b, a)																																						
+	glClearColor(0.211764706f, 0.223529412f, 0.243137255f, 1.0f); //r, g, b, a)																																						
 	
 	glClearColor(0, 0, 0, 1.0f);
+
+	glEnable(GL_DEPTH_TEST);
 
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -228,6 +241,8 @@ int main()
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
 		float currentFrame = glfwGetTime();
+		glm::mat4 selectedModel;
+
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)																																										;
@@ -236,21 +251,120 @@ int main()
 		framecount++;
 
 		cam.processKeyboard(window, deltaTime);
-		//model = glm::rotate(model, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
 
 		glm::mat4 pv = projection * cam.getViewMatrix();//view;
 		glm::vec4 color = glm::vec4(1, 1, 1, 1);//r, g, b, a);
+		
+#pragma region Model Selection
+		if ((glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS))
+		{
+			switch (model)
+			{
+			case TEAPOT:
+				model = CUBE;
+				break;
+			case BUNNY:
+				model = TEAPOT;
+				break;
+			case CUBE:
+				model = BUNNY;
+				break;
+			}
+			printf("Current Model Selected: %i\n", model);
+		};
+
+		if ((glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS))
+		{
+			switch (model)
+			{
+			case TEAPOT:
+				model = BUNNY;
+				break;
+			case BUNNY:
+				model = CUBE;
+				break;
+			case CUBE:
+				model = TEAPOT;
+				break;
+			}
+			printf("Current Model Selected: %i\n", model);
+		};
+#pragma endregion
+#pragma region Model Movement
+
+		switch (model)
+		{
+			case TEAPOT:
+				selectedModel = teapot_model;
+				break;
+			case BUNNY:
+				selectedModel = bunny_model;
+				break;
+			case CUBE:
+				selectedModel = cube_model;
+				break;
+		}
+
+
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) != GLFW_PRESS)
+		{
+			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+				selectedModel = glm::translate(selectedModel, glm::vec3(-1.0f, 0.0f, 0.0f) * deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+				selectedModel = glm::translate(selectedModel, glm::vec3(1.0f, 0.0f, 0.0f) * deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+				selectedModel = glm::translate(selectedModel, glm::vec3(0.0f, 1.0f, 0.0f) * deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+				selectedModel = glm::translate(selectedModel, glm::vec3(0.0f, -1.0f, 0.0f) * deltaTime);
+			if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+				selectedModel = glm::rotate(selectedModel, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
+		}
+
+		switch (model)
+		{
+		case TEAPOT:
+			teapot_model = selectedModel;
+			break;
+		case BUNNY:
+			bunny_model = selectedModel;
+			break;
+		case CUBE:
+			cube_model = selectedModel;
+			break;
+		}
+#pragma endregion
 
 		glUseProgram(shader_program_id);
-		auto uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
-		glUniformMatrix4fv(uniform_location, 1, false, glm::value_ptr(pv));
-		uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
-		glUniformMatrix4fv(uniform_location, 1, false, glm::value_ptr(model));
-		uniform_location = glGetUniformLocation(shader_program_id, "color");
-		glUniform4fv(uniform_location, 1, glm::value_ptr(color));
+		auto bunny_uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
+		glUniformMatrix4fv(bunny_uniform_location, 1, false, glm::value_ptr(pv));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
+		glUniformMatrix4fv(bunny_uniform_location, 1, false, glm::value_ptr(bunny_model));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "color");
+		glUniform4fv(bunny_uniform_location, 1, glm::value_ptr(color));
 		
-		//cube.draw();
 		bunny.draw();
+
+		glUseProgram(shader_program_id);
+		auto cube_uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
+		glUniformMatrix4fv(cube_uniform_location, 1, false, glm::value_ptr(pv));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
+		glUniformMatrix4fv(cube_uniform_location, 1, false, glm::value_ptr(cube_model));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "color");
+		glUniform4fv(cube_uniform_location, 1, glm::value_ptr(color));
+
+		cube.draw();
+
+		
+
+		glUseProgram(shader_program_id);
+		auto teapotuniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
+		glUniformMatrix4fv(teapotuniform_location, 1, false, glm::value_ptr(pv));
+		teapotuniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
+		glUniformMatrix4fv(teapotuniform_location, 1, false, glm::value_ptr(teapot_model));
+		teapotuniform_location = glGetUniformLocation(shader_program_id, "color");
+		glUniform4fv(teapotuniform_location, 1, glm::value_ptr(color));
+
+		teapot.draw();
 
 		//GAME LOGIC, UPDATE AND RENDER
 		if (rpositive)
