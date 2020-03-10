@@ -123,6 +123,8 @@ void Mesh::initialiseCube()
 
 void Mesh::initialisePlane(unsigned int size)
 {
+	assert(vao == 0);
+
 	int vertCount = size * size;
 	int half = size / 2;
 	glm::vec3 temp_vec;

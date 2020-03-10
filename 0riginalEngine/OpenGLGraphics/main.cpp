@@ -15,7 +15,7 @@
 #define WIDTH 1080
 #define HEIGHT 720
 
-enum TARGET_MODEL {
+enum class TARGET_MODEL{
 	TEAPOT,
 	BUNNY,
 	CUBE
@@ -29,23 +29,6 @@ float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 Camera cam(glm::vec3(0, 0, 9));
 
-std::string ReadTextTEST(const char* filepath) {
-	std::ifstream file(filepath, std::ifstream::in);
-	std::stringstream fileData;
-
-
-	//Vertex Shader File Loading
-	if (file.is_open() && file.good()) {
-		fileData << file.rdbuf();
-
-		file.close();
-
-		return fileData.str();
-	}
-	else
-		throw "Could not Load File";
-};
-
 int main()
 {
 	float r = 0.25f																																																				;
@@ -55,8 +38,9 @@ int main()
 
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
+	float keyTimer = 0.0f;
 
-	TARGET_MODEL model = TEAPOT;
+	TARGET_MODEL model = TARGET_MODEL::TEAPOT;
 	Mesh cube;
 	aie::OBJMesh bunny;
 	aie::OBJMesh teapot;
@@ -95,7 +79,7 @@ int main()
 	cube.initialiseCube();
 	glm::mat4 cube_model = glm::mat4(1.0f);
 
-	bunny.load("../OBJs/bunny.obj");
+	bunny.load("../OBJs/Orb.obj");
 	glm::mat4 bunny_model = glm::mat4(1.0f);
 
 	teapot.load("../OBJs/teapot.obj");
@@ -155,7 +139,6 @@ int main()
 	}
 
 #pragma endregion
-
 #pragma region Fragment Shader
 	//Load shader from file into string
 	std::ifstream in_file_stream_frag("..\\Shaders\\simple_frag.glsl", std::ifstream::in);
@@ -200,7 +183,6 @@ int main()
 		delete[] log;
 	}
 #pragma endregion
-
 #pragma region Linking Shader
 	//Link the two
 	shader_program_id = glCreateProgram();
@@ -237,7 +219,7 @@ int main()
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	//Game loop
+#pragma region Game loop
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
 		float currentFrame = glfwGetTime();
@@ -253,54 +235,70 @@ int main()
 		cam.processKeyboard(window, deltaTime);
 
 		glm::mat4 pv = projection * cam.getViewMatrix();//view;
-		glm::vec4 color = glm::vec4(1, 1, 1, 1);//r, g, b, a);
+		glm::vec4 color = glm::vec4(1, 1, 1, 1);// r, g, b, a);
+		glm::vec3 ka = glm::vec3(1);
+		glm::vec3 kd = glm::vec3(1);
+		glm::vec3 ks = glm::vec3(1);
+		glm::vec3 ia = glm::vec3(0.5);
+		glm::vec3 id = glm::vec3(1);
+		glm::vec3 is = glm::vec3(1);
+		glm::vec3 lightDirection = glm::normalize(glm::vec3(glm::cos(currentFrame * 2), glm::sin(currentFrame * 2), 0));
+		float specPower = 10.0f;
 		
 #pragma region Model Selection
 		if ((glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS))
 		{
-			switch (model)
+			if (keyTimer <= 0)
 			{
-			case TEAPOT:
-				model = CUBE;
-				break;
-			case BUNNY:
-				model = TEAPOT;
-				break;
-			case CUBE:
-				model = BUNNY;
-				break;
+				switch (model)
+				{
+				case TARGET_MODEL::TEAPOT:
+					model = TARGET_MODEL::CUBE;
+					break;
+				case TARGET_MODEL::BUNNY:
+					model = TARGET_MODEL::TEAPOT;
+					break;
+				case TARGET_MODEL::CUBE:
+					model = TARGET_MODEL::BUNNY;
+					break;
+				}
+				printf("Current Model Selected: %i\n", model);
+				keyTimer = 1.0f;
 			}
-			printf("Current Model Selected: %i\n", model);
 		};
 
 		if ((glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS))
 		{
-			switch (model)
+			if (keyTimer <= 0)
 			{
-			case TEAPOT:
-				model = BUNNY;
-				break;
-			case BUNNY:
-				model = CUBE;
-				break;
-			case CUBE:
-				model = TEAPOT;
-				break;
+				switch (model)
+				{
+				case TARGET_MODEL::TEAPOT:
+					model = TARGET_MODEL::BUNNY;
+					break;
+				case TARGET_MODEL::BUNNY:
+					model = TARGET_MODEL::CUBE;
+					break;
+				case TARGET_MODEL::CUBE:
+					model = TARGET_MODEL::TEAPOT;
+					break;
+				}
+				printf("Current Model Selected: %i\n", model);
+				keyTimer = 1.0f;
 			}
-			printf("Current Model Selected: %i\n", model);
 		};
 #pragma endregion
 #pragma region Model Movement
 
 		switch (model)
 		{
-			case TEAPOT:
+			case TARGET_MODEL::TEAPOT:
 				selectedModel = teapot_model;
 				break;
-			case BUNNY:
+			case TARGET_MODEL::BUNNY:
 				selectedModel = bunny_model;
 				break;
-			case CUBE:
+			case TARGET_MODEL::CUBE:
 				selectedModel = cube_model;
 				break;
 		}
@@ -317,18 +315,18 @@ int main()
 			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 				selectedModel = glm::translate(selectedModel, glm::vec3(0.0f, -1.0f, 0.0f) * deltaTime);
 			if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-				selectedModel = glm::rotate(selectedModel, 0.016f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
+				selectedModel = glm::rotate(selectedModel, 0.64f * deltaTime, glm::vec3(0.2f, 1.0f, 1.0f));
 		}
 
 		switch (model)
 		{
-		case TEAPOT:
+		case TARGET_MODEL::TEAPOT:
 			teapot_model = selectedModel;
 			break;
-		case BUNNY:
+		case TARGET_MODEL::BUNNY:
 			bunny_model = selectedModel;
 			break;
-		case CUBE:
+		case TARGET_MODEL::CUBE:
 			cube_model = selectedModel;
 			break;
 		}
@@ -339,30 +337,81 @@ int main()
 		glUniformMatrix4fv(bunny_uniform_location, 1, false, glm::value_ptr(pv));
 		bunny_uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
 		glUniformMatrix4fv(bunny_uniform_location, 1, false, glm::value_ptr(bunny_model));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "normal_matrix");
+		glUniformMatrix3fv(bunny_uniform_location, 1, false, glm::value_ptr(glm::inverse(bunny_model)));
 		bunny_uniform_location = glGetUniformLocation(shader_program_id, "color");
 		glUniform4fv(bunny_uniform_location, 1, glm::value_ptr(color));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Ka");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(ka));		
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Kd");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(kd));		
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Ks");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(ks));		
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Ia");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(ia));		
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Id");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(id));		
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "Is");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(is));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "light_direction");
+		glUniform3fv(bunny_uniform_location, 1, glm::value_ptr(lightDirection));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "specular_power");
+		glUniform1f(bunny_uniform_location, specPower);
+
 		
 		bunny.draw();
 
-		glUseProgram(shader_program_id);
 		auto cube_uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
 		glUniformMatrix4fv(cube_uniform_location, 1, false, glm::value_ptr(pv));
 		cube_uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
 		glUniformMatrix4fv(cube_uniform_location, 1, false, glm::value_ptr(cube_model));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "normal_matrix");
+		glUniformMatrix3fv(bunny_uniform_location, 1, false, glm::value_ptr(glm::inverse(cube_model)));
 		cube_uniform_location = glGetUniformLocation(shader_program_id, "color");
 		glUniform4fv(cube_uniform_location, 1, glm::value_ptr(color));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Ka");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(ka));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Kd");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(kd));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Ks");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(ks));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Ia");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(ia));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Id");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(id));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "Is");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(is));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "light_direction");
+		glUniform3fv(cube_uniform_location, 1, glm::value_ptr(lightDirection));
+		cube_uniform_location = glGetUniformLocation(shader_program_id, "specular_power");
+		glUniform1f(cube_uniform_location, specPower);
 
 		cube.draw();
 
-		
-
-		glUseProgram(shader_program_id);
-		auto teapotuniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
-		glUniformMatrix4fv(teapotuniform_location, 1, false, glm::value_ptr(pv));
-		teapotuniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
-		glUniformMatrix4fv(teapotuniform_location, 1, false, glm::value_ptr(teapot_model));
-		teapotuniform_location = glGetUniformLocation(shader_program_id, "color");
-		glUniform4fv(teapotuniform_location, 1, glm::value_ptr(color));
+		auto teapot_uniform_location = glGetUniformLocation(shader_program_id, "projection_view_matrix");
+		glUniformMatrix4fv(teapot_uniform_location, 1, false, glm::value_ptr(pv));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "model_matrix");
+		glUniformMatrix4fv(teapot_uniform_location, 1, false, glm::value_ptr(teapot_model));
+		bunny_uniform_location = glGetUniformLocation(shader_program_id, "normal_matrix");
+		glUniformMatrix3fv(bunny_uniform_location, 1, false, glm::value_ptr(glm::inverse(teapot_model)));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "color");
+		glUniform4fv(teapot_uniform_location, 1, glm::value_ptr(color));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Ka");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(ka));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Kd");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(kd));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Ks");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(ks));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Ia");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(ia));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Id");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(id));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "Is");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(is));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "light_direction");
+		glUniform3fv(teapot_uniform_location, 1, glm::value_ptr(lightDirection));
+		teapot_uniform_location = glGetUniformLocation(shader_program_id, "specular_power");
+		glUniform1f(teapot_uniform_location, specPower);
 
 		teapot.draw();
 
@@ -411,8 +460,11 @@ int main()
 		
 		glfwSwapBuffers(window)																																																	;
 		glfwPollEvents();
-	}
 
+		if (keyTimer > 0.0f)
+			keyTimer -= deltaTime;
+	}
+#pragma endregion
 	glfwDestroyWindow(window)																																																	;
 	glfwTerminate()																																																				;
 	return 0;
